@@ -1,0 +1,245 @@
+---
+title: "Rad Onc Daily Process"
+output: html_document
+date: '2022-06-23'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load Packages}
+# Load packages ----------------------------------------------------------------
+suppressMessages({
+  memory.limit(size = 10000000)
+  library(readxl)
+  library(writexl)
+  library(plyr)
+  library(dplyr)
+  library(data.table)
+  library(zoo)
+  library(shiny)
+  library(shinydashboard)
+  library(shinydashboardPlus)
+  library(shinyWidgets)
+  library(htmlwidgets)
+  library(lubridate)
+  library(tcltk)
+  library(tidyverse)
+  library(plotly)
+  library(knitr)
+  library(kableExtra)
+  library(leaflet)
+  library(grid)
+  library(gridExtra)
+  library(eeptools)
+  library(ggQC)
+  #library(zipcode)
+  library(utils)
+  library(scales)
+  library(chron)
+  library(bupaR)
+  library(shiny)
+  library(DT)
+  library(DiagrammeR)
+  library(shinyalert)
+  library(edeaR)
+  library(processmapR)
+  library(processmonitR)
+  library(processanimateR)
+  library(tidyr)
+  library(lubridate)
+  library(RColorBrewer)
+  library(DiagrammeR)
+  library(ggplot2)
+  library(leaflet)
+  library(readr)
+  library(highcharter)
+  library(ggforce) # for 'geom_arc_bar'
+  library(packcircles) # for packed circle graph
+  library(viridis)
+  library(ggiraph)
+  library(treemapify)
+  library(treemap)
+  library(broom)
+  library(extrafont)
+  library(tis) # for US holidays
+  library(vroom)
+  library(sjmisc)
+  library(tools)
+  library(here)
+  library(shinyBS)
+  library(shinyscreenshot)
+  library(fasttime)
+  library(shinycssloaders)
+  library(feather)
+  # library(zipcodeR)
+  library(formattable)
+  library(shinyjs)
+  library(janitor)
+  library(patchwork)
+  library(XML)
+  library(textreadr)
+  library(RCurl)
+  library(rlist)
+  library(XML)
+  library(rlist)
+})
+
+```
+
+```{r Historical Data Compilation}
+
+# 1. Read in historical data -------------------------------------------------
+## Scheduled Appointments
+# wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Scheduled Appts"
+
+# list_scheduled_appts <- list.files(path=wd, full.names=TRUE)
+# 
+# historical_scheduled_appts <- lapply(list_scheduled_appts,function(filename){
+#   print(paste("Merging",filename,sep = " "))
+#   read_excel(filename, col_names = TRUE, na = c("", "NA"))
+# })
+# 
+# #Merge New Raw Data 
+# historical_scheduled_appts <- do.call(rbind.data.frame, historical_scheduled_appts )
+# historical_scheduled_appts <- as.data.frame(historical_scheduled_appts)
+# historical_scheduled_appts <- historical_scheduled_appts %>%
+#   distinct()
+# 
+# 
+# ## Appointments --------------------------------------------------------------
+# wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Appts"
+# 
+# list_appts <- list.files(path=wd, full.names=TRUE)
+# 
+# historical_appts <- lapply(list_appts,function(filename){
+#   print(paste("Merging",filename,sep = " "))
+#   read_excel(filename, col_names = TRUE, na = c("", "NA"))
+# })
+# 
+# #Merge New Raw Data 
+# historical_appts <- do.call(rbind.data.frame, historical_appts)
+# historical_appts <- as.data.frame(historical_appts)
+# historical_appts <- historical_appts %>%
+#   distinct()
+
+
+# Data Processing --------------------------------------------------------------
+## Processing Function =========================================================
+daily_process <- function(data){
+  # Rename columns to resemble Epic patient access data (historical_data)
+  # original.cols <- c("Appt Schedule Date", "Date of Appointment", "Appt Cancellation Date", 
+  #                    "Appt Cancel User", "Time of Appointment", "Appointment Duration", 
+  #                    "Appt Scheduler Name", "Appt Status (sys)", "Appt Status (usr)", 
+  #                    "CANCEL_INITIATOR", "CANCEL_INITIATOR_TYPE", "Cancel Reason", "Date of Service", 
+  #                    "Department", "Site", "Location", "MRN", "PatName", "Vist Type", "Description",
+  #                    "Provider Name", "New Patient")
+  # 
+  # new.cols <- c("Appt.Made.Date", "Appt.Date", "Appt.Canceled.Date", 
+  #               "Canceled.User", "Appt.Time", "App.Dur", 
+  #               "Scheduled.By", "Appt.Status.Sys", "Appt.Status.Usr", 
+  #               "CANCEL_INITIATOR", "CANCEL_INITIATOR_TYPE", "Cancel Reason", "Date of Service", 
+  #                    "Department", "Site", "Location", "MRN", "PatName", "Vist Type", "Description",
+  #                    "Provider Name", "New Patient")
+  # 
+  # data <- data[original.cols]
+  # colnames(data) <- new.cols
+  
+  # Creating additional columns for analysis
+  data <- historical_appts %>%
+    mutate(Department = "Radiation Oncology",
+           Appt.DateYear = as.Date(`Date of Appointment`, format="%Y-%m-%d"),
+           Appt.MonthYear = format(Appt.DateYear, "%Y-%m"),
+           Appt.Date = format(Appt.DateYear, "%m-%d"),
+           Appt.Year = format(Appt.DateYear, "%Y"),
+           Appt.Month = format(Appt.DateYear, "%b"),
+           Appt.Quarter = quarters(Appt.DateYear),
+           Appt.Week = floor_date(Appt.DateYear, unit="week", week_start = 1),
+           Appt.Day = format(Appt.DateYear, "%a"),
+           Appt.Time = format(as.POSIXct(`Time of Appointment`), "%H:%M"),
+           Appt.TM.Hr = format(floor_date(strptime(paste("2001-01-01", Appt.Time), 
+                                                   format="%Y-%m-%d %H:%M"), unit="hour"), format="%H:%M"),
+           Appt.Made.DTTM = as.Date(`Appt Schedule Date`, format="%Y-%m-%d"),
+           Cancel.DTTM = as.Date(`Appt Cancellation Date`, format="%Y-%m-%d"),
+           Lead.Days = as.Date(Appt.DateYear, format="%Y-%m-%d")-as.Date(Cancel.DTTM, format="%Y-%m-%d"),
+           Wait.Time = as.Date(Appt.DateYear, format="%Y-%m-%d")-as.Date(Appt.Made.DTTM, format="%Y-%m-%d")
+    )
+}
+
+# 
+# radOnc_scheduled_data <- daily_process(historical_scheduled_appts)
+# radOnc_historical_data <- daily_process(historical_appts)
+# 
+# saveRDS(radOnc_scheduled_data, "radOnc_scheduled_data.rds")
+# saveRDS(radOnc_historical_data, "radOnc_historical_data.rds")
+
+```
+
+
+
+```{r Scrape Scheduled Data Procesing}
+
+dir_path <- "/data/Radiology"
+
+url_appt_scheduled <- "http://10.5.4.230:1722/tools/tool_SOT_view.php?report_type=1"
+
+theurl_scheduled <- getURL(url_appt_scheduled,.opts = list(ssl.verifypeer = FALSE) )
+scheduled_data <- readHTMLTable(theurl_scheduled)
+scheduled_data <- list.clean(scheduled_data, fun = is.null, recursive = FALSE)
+n.rows <- unlist(lapply(scheduled_data, function(t) dim(t)[1]))
+
+scheduled_data <- scheduled_data[[which.max(n.rows)]]
+cols <- scheduled_data[1,]
+scheduled_data <- scheduled_data[-1,]
+colnames(scheduled_data) <- cols
+
+
+## Processed data output =======================================================
+daily_scheduled_data <- daily_process(scheduled_data)
+
+# Import in radiology_historical_data ------------------------------------------
+repo_scheduled_data <- readRDS(paste0(dir_path,"/radOnc_scheduled_data.rds"))
+
+# Merge daily processed data with historical data ------------------------------
+merged_data <- bind_rows(repo_scheduled_data, daily_scheduled_data)
+merged_data <- distinct(merged_data)
+
+# Write out appended radiology data --------------------------------------------
+saveRDS(merged_data, paste0(dir_path, "/radOnc_scheduled_data.rds"))
+
+
+```
+
+
+```{r Scrape Appts Data Procesing}
+
+url_appts <- "http://10.5.4.230:1722/tools/tool_SOT_view.php?report_type=0"
+
+theurl_appts <- getURL(url_appts,.opts = list(ssl.verifypeer = FALSE) )
+appts_data <- readHTMLTable(theurl_appts)
+appts_data <- list.clean(appts_data, fun = is.null, recursive = FALSE)
+n.rows <- unlist(lapply(appts_data, function(t) dim(t)[1]))
+
+appts_data <- appts_data[[which.max(n.rows)]]
+cols <- appts_data[1,]
+appts_data <- appts_data[-1,]
+colnames(appts_data) <- cols
+
+
+## Processed data output =======================================================
+daily_scheduled_data <- daily_process(scheduled_data)
+
+# Import in radiology_historical_data ------------------------------------------
+repo_scheduled_data <- readRDS(paste0(dir_path,"/radOnc_scheduled_data.rds"))
+
+# Merge daily processed data with historical data ------------------------------
+merged_data <- bind_rows(repo_scheduled_data, daily_scheduled_data)
+merged_data <- distinct(merged_data)
+
+# Write out appended radiology data --------------------------------------------
+saveRDS(merged_data, paste0(dir_path, "/radOnc_scheduled_data.rds"))
+
+```
+
+
