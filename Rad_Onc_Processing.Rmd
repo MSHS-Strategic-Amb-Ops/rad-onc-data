@@ -228,17 +228,17 @@ colnames(appts_data) <- cols
 
 
 ## Processed data output =======================================================
-daily_scheduled_data <- daily_process(scheduled_data)
+daily_scheduled_data <- daily_process(appts_data)
 
 # Import in radiology_historical_data ------------------------------------------
-repo_scheduled_data <- readRDS(paste0(dir_path,"/radOnc_scheduled_data.rds"))
+repo_scheduled_data <- readRDS(paste0(dir_path,"/radOnc_historical_data.rds"))
 
 # Merge daily processed data with historical data ------------------------------
 merged_data <- bind_rows(repo_scheduled_data, daily_scheduled_data)
 merged_data <- distinct(merged_data)
 
 # Write out appended radiology data --------------------------------------------
-saveRDS(merged_data, paste0(dir_path, "/radOnc_scheduled_data.rds"))
+saveRDS(merged_data, paste0(dir_path, "/radOnc_historical_data.rds"))
 
 ```
 
