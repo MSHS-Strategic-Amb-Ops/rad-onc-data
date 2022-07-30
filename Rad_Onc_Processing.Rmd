@@ -78,12 +78,15 @@ suppressMessages({
   library(shinyjs)
   library(janitor)
   library(patchwork)
+  install.packages("XML")
   library(XML)
+  install.packages("textreadr")
   library(textreadr)
+  install.packages("RCurl")
   library(RCurl)
+  install.packages("RCurl")
   library(rlist)
-  library(XML)
-  library(rlist)
+  install.packages("rlist")
 })
 
 ```
