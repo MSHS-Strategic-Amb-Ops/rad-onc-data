@@ -90,36 +90,36 @@ suppressMessages({
 
 # 1. Read in historical data -------------------------------------------------
 ## Scheduled Appointments
-wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Scheduled Appts"
-
-list_scheduled_appts <- list.files(path=wd, full.names=TRUE)
-
-historical_scheduled_appts <- lapply(list_scheduled_appts,function(filename){
-  print(paste("Merging",filename,sep = " "))
-  read_excel(filename, col_names = TRUE, na = c("", "NA"))
-})
-
-#Merge New Raw Data
-historical_scheduled_appts <- do.call(rbind.data.frame, historical_scheduled_appts )
-historical_scheduled_appts <- as.data.frame(historical_scheduled_appts)
-historical_scheduled_appts <- historical_scheduled_appts %>%
-  distinct()
-
-## Appointments --------------------------------------------------------------
-wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Appts"
-
-list_appts <- list.files(path=wd, full.names=TRUE)
-
-historical_appts <- lapply(list_appts,function(filename){
-  print(paste("Merging",filename,sep = " "))
-  read_excel(filename, col_names = TRUE, na = c("", "NA"))
-})
-
-#Merge New Raw Data
-historical_appts <- do.call(rbind.data.frame, historical_appts)
-historical_appts <- as.data.frame(historical_appts)
-historical_appts <- historical_appts %>%
-  distinct()
+# wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Scheduled Appts"
+# 
+# list_scheduled_appts <- list.files(path=wd, full.names=TRUE)
+# 
+# historical_scheduled_appts <- lapply(list_scheduled_appts,function(filename){
+#   print(paste("Merging",filename,sep = " "))
+#   read_excel(filename, col_names = TRUE, na = c("", "NA"))
+# })
+# 
+# #Merge New Raw Data
+# historical_scheduled_appts <- do.call(rbind.data.frame, historical_scheduled_appts )
+# historical_scheduled_appts <- as.data.frame(historical_scheduled_appts)
+# historical_scheduled_appts <- historical_scheduled_appts %>%
+#   distinct()
+# 
+# ## Appointments --------------------------------------------------------------
+# wd <- "C:/Users/kweons01/Desktop/Strategic Initiatives - So Youn/Rad Onc Data/Appts"
+# 
+# list_appts <- list.files(path=wd, full.names=TRUE)
+# 
+# historical_appts <- lapply(list_appts,function(filename){
+#   print(paste("Merging",filename,sep = " "))
+#   read_excel(filename, col_names = TRUE, na = c("", "NA"))
+# })
+# 
+# #Merge New Raw Data
+# historical_appts <- do.call(rbind.data.frame, historical_appts)
+# historical_appts <- as.data.frame(historical_appts)
+# historical_appts <- historical_appts %>%
+#   distinct()
 
 
 # Data Processing --------------------------------------------------------------
@@ -165,11 +165,11 @@ daily_process <- function(data){
 }
 
 
-radOnc_scheduled_data <- daily_process(historical_scheduled_appts)
-radOnc_historical_data <- daily_process(historical_appts)
-
-saveRDS(radOnc_scheduled_data, "radOnc_scheduled_data.rds")
-saveRDS(radOnc_historical_data, "radOnc_historical_data.rds")
+# radOnc_scheduled_data <- daily_process(historical_scheduled_appts)
+# radOnc_historical_data <- daily_process(historical_appts)
+# 
+# saveRDS(radOnc_scheduled_data, "radOnc_scheduled_data.rds")
+# saveRDS(radOnc_historical_data, "radOnc_historical_data.rds")
 
 ```
 
@@ -191,7 +191,7 @@ cols <- scheduled_data[1,]
 scheduled_data <- scheduled_data[-1,]
 colnames(scheduled_data) <- cols
 
-write_xlsx(scheduled_data, paste0("radOnc_appts_created_",Sys.Date(),".xlsx"))
+# write_xlsx(scheduled_data, paste0("radOnc_appts_created_",Sys.Date(),".xlsx"))
 
 # ## Processed data output =======================================================
 # daily_scheduled_data <- daily_process(scheduled_data)
@@ -211,14 +211,14 @@ write_xlsx(scheduled_data, paste0("radOnc_appts_created_",Sys.Date(),".xlsx"))
 daily_scheduled_data <- daily_process(scheduled_data)
 
 # Import in radiology_historical_data ------------------------------------------
-repo_scheduled_data <- readRDS("radOnc_scheduled_data.rds")
+repo_scheduled_data <- readRDS(paste0(dir_path,"/radOnc_scheduled_data.rds"))
 
 # Merge daily processed data with historical data ------------------------------
 merged_data <- bind_rows(repo_scheduled_data, daily_scheduled_data)
 merged_data <- distinct(merged_data)
 
 # Write out appended radiology data --------------------------------------------
-saveRDS(merged_data, "radOnc_scheduled_data.rds")
+saveRDS(merged_data, paste0(dir_path, "/radOnc_scheduled_data.rds"))
 
 ```
 
@@ -237,7 +237,7 @@ cols <- appts_data[1,]
 appts_data <- appts_data[-1,]
 colnames(appts_data) <- cols
 
-write_xlsx(appts_data, paste0("radOnc_appts_",Sys.Date(),".xlsx"))
+# write_xlsx(appts_data, paste0("radOnc_appts_",Sys.Date(),".xlsx"))
 
 # ## Processed data output =======================================================
 # daily_scheduled_data <- daily_process(appts_data)
@@ -257,14 +257,14 @@ write_xlsx(appts_data, paste0("radOnc_appts_",Sys.Date(),".xlsx"))
 daily_scheduled_data <- daily_process(appts_data)
 
 # Import in radiology_historical_data ------------------------------------------
-repo_scheduled_data <- readRDS("radOnc_historical_data.rds")
+repo_scheduled_data <-readRDS(paste0(dir_path,"/radOnc_historical_data.rds"))
 
 # Merge daily processed data with historical data ------------------------------
 merged_data <- bind_rows(repo_scheduled_data, daily_scheduled_data)
 merged_data <- distinct(merged_data)
 
 # Write out appended radiology data --------------------------------------------
-saveRDS(merged_data, "radOnc_historical_data.rds")
+saveRDS(merged_data, paste0(dir_path, "/radOnc_historical_data.rds"))
 
 ```
 
